@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+require_relative './coordination'
+
+def usage
+  STDERR.puts "Usage: #$0 batch-name expected-count"
+  exit 1
+end
+
+coordinator, worker = Coordination.defaults
+batch_name          = ARGV[0] || usage
+batch               = Coordination::Batch.new(batch_name)
+expected_count      = (ARGV[1] || usage).to_i
+
+coordinator.wait_for batch, expected_count

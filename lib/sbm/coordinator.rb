@@ -26,27 +26,15 @@ module SBM
     end
 
     class Worker < Struct.new(:name)
-
       def to_s; name; end
-
     end
 
     def batches
-
-      redis.smembers(key(:batches)).map { |w| Worker.new(w) }
-
+      redis.smembers(key(:batches)).map { |w| Batch.new(w) }
     end
 
     def workers
       redis.smembers(key(:workers)).map { |w| Worker.new(w) }
-    end
-
-    def register_worker(worker)
-      redis.sadd key(:workers), worker.to_s
-    end
-
-    def register_batch(batch)
-      redis.sadd key(:batches), worker.to_s
     end
 
     def started_workers_for_batch(batch)
@@ -58,10 +46,13 @@ module SBM
     end
 
     def start(batch, worker)
-      redis.sadd key(:batches, batch, :started), worker.to_s
+      prepare worker, batch
+      redis.sadd key(:batches, batch, :started),   worker.to_s
+      redis.srem key(:batches, batch, :completed), worker.to_s
     end
 
     def complete(worker, batch)
+      prepare worker, batch
       redis.sadd key(:batches, batch, :completed), worker.to_s
     end
 
@@ -74,6 +65,19 @@ module SBM
     end
 
     private
+
+    def prepare(worker, batch)
+      register_worker worker
+      register_batch  batch
+    end
+
+    def register_worker(worker)
+      redis.sadd key(:workers), worker.to_s
+    end
+
+    def register_batch(batch)
+      redis.sadd key(:batches), worker.to_s
+    end
 
     def key(*args)
       [coordinator_name, *args].join(":")

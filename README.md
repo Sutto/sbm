@@ -4,6 +4,8 @@ Manages running / coordinating batch processes running across multiple hosts.
 
 Uses redis as a simple coordinator to ensure split work runs across hosts evenly.
 
+**Note:** SBM is still a hack. It's untested. Don't use this for production stuff. Please!
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -22,7 +24,7 @@ Or install it yourself as:
 
 SBM is composed of a set of simple scripts useful for running in shells. The only required
 variable is `NODE_NAME` as an environment variable - the name of the node the current job is
-running on.
+running on.`
 
 ```bash
 #!/usr/bin/env bash -e
@@ -32,15 +34,17 @@ export NODE_NAME="$(hostname)"
 # Used if you have a bunch of different batches with the same name:
 # export COORDINATOR_NAME='your-groups'
 
-sbm-start-work my-test-batch
+sbm start-work my-test-batch
 rake do:your:Work
-sbm-complete-work my-test-batch && sbm-wait-for my-test-batch 20 # There are 20 nodes running this process
+sbm complete-work my-test-batch && sbm wait-for my-test-batch 20 # There are 20 nodes running this process
 
-sbm-status
+sbm status
 
 ```
 
 Wait for simply checks the number of items in the completed set have the correct length.
+
+Please note that by default it uses redis for this, so to change your default redis use `REDIS_URI`.
 
 ## Contributing
 

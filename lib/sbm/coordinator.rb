@@ -7,7 +7,7 @@ module SBM
   class Coordinator
 
     def self.defaults
-      worker_name      = (ENV['NODE_NAME']        || raise "Please ensure NODE_NAME is set")
+      worker_name      = (ENV['NODE_NAME']        or raise "Please ensure NODE_NAME is set")
       coordinator_name = (ENV['COORDINATOR_NAME'] || "worker-coordinator")
       return new(coordinator_name), Worker.new(worker_name)
     end
@@ -38,11 +38,11 @@ module SBM
     end
 
     def started_workers_for_batch(batch)
-      key(:batches, batch, :started).map { |w| Worker.new(w) }
+      redis.smembers(key(:batches, batch, :started)).map { |w| Worker.new(w) }
     end
 
     def completed_workers_for_batch(batch)
-      key(:batches, batch, :completed).map { |w| Worker.new(w) }
+      redis.smembers(key(:batches, batch, :completed)).map { |w| Worker.new(w) }
     end
 
     def start(batch, worker)
@@ -51,7 +51,7 @@ module SBM
       redis.srem key(:batches, batch, :completed), worker.to_s
     end
 
-    def complete(worker, batch)
+    def complete(batch, worker)
       prepare worker, batch
       redis.sadd key(:batches, batch, :completed), worker.to_s
     end
@@ -76,7 +76,7 @@ module SBM
     end
 
     def register_batch(batch)
-      redis.sadd key(:batches), worker.to_s
+      redis.sadd key(:batches), batch.to_s
     end
 
     def key(*args)

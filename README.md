@@ -35,7 +35,7 @@ export NODE_NAME="$(hostname)"
 # export COORDINATOR_NAME='your-groups'
 
 sbm start-work my-test-batch
-rake do:your:Work
+rake do:your:work
 sbm complete-work my-test-batch && sbm wait-for my-test-batch 20 # There are 20 nodes running this process
 
 sbm status

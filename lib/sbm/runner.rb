@@ -2,9 +2,9 @@ module SBM
   class Runner
 
     USAGES = {
-      'status'         => ''
-      'wait-for'       => 'batch-name worker-count'
-      'start-batch'    => 'batch-name'
+      'status'         => '',
+      'wait-for'       => 'batch-name worker-count',
+      'start-batch'    => 'batch-name',
       'complete-batch' => 'batch-name'
     }
 
@@ -12,9 +12,9 @@ module SBM
 
     def initialize(args)
       @command = args.shift
-      usage true if command.nil? or !USAGE.has_key?(command)
+      usage true if command.nil? or !USAGES.has_key?(command)
       @args    = args
-      @coordinator, @worker = SBM::Cordinator.defaults
+      @coordinator, @worker = SBM::Coordinator.defaults
     end
 
     def run
@@ -22,6 +22,22 @@ module SBM
     end
 
     def status
+      puts "Known Workers: #{coordinator.workers.sort_by(&:name).join(", ")}"
+      puts "Known Batches: #{coordinator.batches.sort_by(&:name).join(", ")}"
+      puts ""
+      puts ""
+      coordinator.batches.each do |batch|
+        started   = coordinator.started_workers_for_batch batch
+        completed = coordinator.started_workers_for_batch completed
+        puts "Batch: #{batch}"
+        puts "Number Started:   #{started.size}"
+        puts "Number Completed: #{completed.size}"
+        puts "Number Pending:   #{started.size - completed.size}"
+        puts "---"
+        puts "Started:   #{started.sort_by(&:name).join(", ")}"
+        puts "Completed: #{completed.sort_by(&:name).join(", ")}"
+        puts ""
+      end
     end
 
     def wait_for
@@ -34,7 +50,7 @@ module SBM
         warn "You must provide a non-zero worker count"
         usage
       end
-      batch = Coordination::Batch.new(batch_name)
+      batch = Coordinator::Batch.new(batch_name)
       coordinator.wait_for batch, worker_count
     end
 
@@ -44,7 +60,7 @@ module SBM
         warn "You must provide a batch name :("
         usage
       end
-      batch = Coordination::Batch.new(batch_name)
+      batch = Coordinator::Batch.new(batch_name)
       coordinator.start batch, worker
     end
 
@@ -54,7 +70,8 @@ module SBM
         warn "You must provide a batch name :("
         usage
       end
-      batch = Coordination::Batch.new(batch_name)
+      batch = Coordinator::Batch.new(batch_name)
+      p batch: batch, worker: worker
       coordinator.complete batch, worker
     end
 

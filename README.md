@@ -46,6 +46,17 @@ Wait for simply checks the number of items in the completed set have the correct
 
 Please note that by default it uses redis for this, so to change your default redis use `REDIS_URI`.
 
+### Commands
+
+* `sbm status` - Show status of all batches.
+* `sbm start-batch batch-name` - Current worker starts the specified batch.
+* `sbm complete-batch batch-name` - Current worker starts the specified batch.
+* `sbm wait-for batch-name count` - Wait until `count` workers have completed `batch-name`.
+* `sbm clear-batch batch-name` - Clear information for the given batch.
+* `sbm clear-batches` - Clear all batch info.
+* `sbm clear-workers` - Clear all worker info.
+
+
 ## Contributing
 
 1. Fork it

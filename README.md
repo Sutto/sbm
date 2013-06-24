@@ -23,16 +23,16 @@ Or install it yourself as:
 ## Usage
 
 SBM is composed of a set of simple scripts useful for running in shells. The only required
-variable is `NODE_NAME` as an environment variable - the name of the node the current job is
+variable is `SBM_WORKER` as an environment variable - the name of the node the current job is
 running on.`
 
 ```bash
 #!/usr/bin/env bash -e
 
-export NODE_NAME="$(hostname)"
+export SBM_WORKER="$(hostname)-$$"
 
 # Used if you have a bunch of different batches with the same name:
-# export COORDINATOR_NAME='your-groups'
+# export SBM_COORDINATOR='your-groups'
 
 sbm start-work my-test-batch
 rake do:your:work

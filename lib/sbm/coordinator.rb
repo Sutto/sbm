@@ -7,15 +7,15 @@ module SBM
   class Coordinator
 
     def self.defaults
-      worker_name      = (ENV['NODE_NAME']        or raise "Please ensure NODE_NAME is set")
-      coordinator_name = (ENV['COORDINATOR_NAME'] || "worker-coordinator")
+      worker_name      = (ENV['SBM_WORKER'] or raise "Please ensure SBM_WORKER is set")
+      coordinator_name = (ENV['SBM_COORDINATOR'] || "worker-coordinator")
       return new(coordinator_name), Worker.new(worker_name)
     end
 
-    attr_reader :coordinator_name, :redis
+    attr_reader :name, :redis
 
     def initialize(name)
-      @coordinator_name = name.to_s
+      @name = name.to_s
       @redis = Redis.current
     end
 
@@ -80,7 +80,7 @@ module SBM
     end
 
     def key(*args)
-      [coordinator_name, *args].join(":")
+      [name, *args].join(":")
     end
 
   end

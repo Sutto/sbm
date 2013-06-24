@@ -8,82 +8,84 @@ module SBM
       'complete-batch' => 'batch-name'
     }
 
-    attr_reader :command, :args, :coordinator, :worker
+    attr_reader :command, :args, :coordinator, :worker, :output, :error
 
-    def initialize(args)
-      @command = args.shift
-      usage true if command.nil? or !USAGES.has_key?(command)
-      @args    = args
+    def initialize(args, output = STDOUT, error = STDERR)
+      @command = args.first
+      @args    = args.drop(1)
+      @output = output
+      @error = error
       @coordinator, @worker = SBM::Coordinator.defaults
     end
 
+    def validate_command!
+      if command.nil? or !USAGES.has_key?(command)
+        usage true
+      end
+    end
+
     def run
+      validate_command!
       send command.tr('-', '_').to_sym
     end
 
     def status
-      puts "Known Workers: #{coordinator.workers.sort_by(&:name).join(", ")}"
-      puts "Known Batches: #{coordinator.batches.sort_by(&:name).join(", ")}"
-      puts ""
-      puts ""
+      output.puts "Known Workers: #{coordinator.workers.map(&:name).sort.join(", ")}"
+      output.puts "Known Batches: #{coordinator.batches.map(&:name).sort.join(", ")}"
+      output.puts ""
+      output.puts ""
       coordinator.batches.each do |batch|
         started   = coordinator.started_workers_for_batch batch
         completed = coordinator.started_workers_for_batch completed
-        puts "Batch: #{batch}"
-        puts "Number Started:   #{started.size}"
-        puts "Number Completed: #{completed.size}"
-        puts "Number Pending:   #{started.size - completed.size}"
-        puts "---"
-        puts "Started:   #{started.sort_by(&:name).join(", ")}"
-        puts "Completed: #{completed.sort_by(&:name).join(", ")}"
-        puts ""
+        output.puts "Batch: #{batch}"
+        output.puts "Number Started:   #{started.size}"
+        output.puts "Number Completed: #{completed.size}"
+        output.puts "Number Pending:   #{started.size - completed.size}"
+        output.puts "---"
+        output.puts "Started:   #{started.map(&:name).sort.join(", ")}"
+        output.puts "Completed: #{completed.map(&:name).sort.join(", ")}"
+        output.puts ""
       end
     end
 
     def wait_for
-      batch_name = args.first
-      worker_count = args[1].to_i
-      if batch_name.to_s.strip.empty?
-        warn "You must provide a batch name :("
-        usage
-      elsif  worker_count.zero?
-        warn "You must provide a non-zero worker count"
+      batch = extract_batch!
+      worker_count = args.shift.to_i
+      if worker_count.zero?
+        error.puts "You must provide a non-zero worker count"
         usage
       end
-      batch = Coordinator::Batch.new(batch_name)
       coordinator.wait_for batch, worker_count
     end
 
     def start_batch
-      batch_name = args.first
-      if batch_name.to_s.strip.empty?
-        warn "You must provide a batch name :("
-        usage
-      end
-      batch = Coordinator::Batch.new(batch_name)
+      batch = extract_batch!
       coordinator.start batch, worker
     end
 
     def complete_batch
-      batch_name = args.first
-      if batch_name.to_s.strip.empty?
-        warn "You must provide a batch name :("
-        usage
-      end
-      batch = Coordinator::Batch.new(batch_name)
-      p batch: batch, worker: worker
+      batch = extract_batch!
       coordinator.complete batch, worker
     end
 
     def usage(invalid_command = false)
       if invalid_command
-        STDERR.puts "Invalid / unknown command - must be one of #{USAGES.keys.join(", ")}"
-        STDERR.puts "Usage: #$0 #{USAGES.keys.join("|")} [arguments]"
+        error.puts "Invalid / unknown command - must be one of #{USAGES.keys.join(", ")}"
+        error.puts "Usage: #$0 #{USAGES.keys.join("|")} [arguments]"
         exit 1
       else
-        STDERR.puts "Usage: #$0 #{command} #{USAGES[command]}".strip
+        error.puts "Usage: #$0 #{command} #{USAGES[command]}".strip
         exit 1
       end
+    end
+
+    def extract_batch!
+      batch_name = args.shift
+      if batch_name.to_s.strip.empty?
+        error.puts "You must provide a batch name."
+        usage
+      end
+      Coordinator::Batch.new(batch_name)
     end
 
   end

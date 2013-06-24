@@ -5,7 +5,10 @@ module SBM
       'status'         => '',
       'wait-for'       => 'batch-name worker-count',
       'start-batch'    => 'batch-name',
-      'complete-batch' => 'batch-name'
+      'complete-batch' => 'batch-name',
+      'clear-batch'    => 'batch-name',
+      'clear-batches'  => '',
+      'clear-workers'  => ''
     }
 
     attr_reader :command, :args, :coordinator, :worker, :output, :error
@@ -66,6 +69,19 @@ module SBM
     def complete_batch
       batch = extract_batch!
       coordinator.complete batch, worker
+    end
+
+    def clear_batch
+      batch = extract_batch!
+      coordinator.clear batch
+    end
+
+    def clear_batches
+      coordinator.clear_batches
+    end
+
+    def clear_workers
+      coordinator.clear_workers
     end
 
     def usage(invalid_command = false)

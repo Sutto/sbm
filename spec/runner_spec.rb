@@ -60,7 +60,7 @@ describe SBM::Runner do
     context 'with a runner' do
 
       it 'should let you validate the command' do
-        ['status', 'start-batch', 'complete-batch', 'wait-for'].each do |command|
+        ['status', 'start-batch', 'complete-batch', 'wait-for', 'clear-batch', 'clear-batches', 'clear-workers'].each do |command|
           instance = described_class.new [command], output, error
           dont_allow(instance).exit.with_any_args
           instance.validate_command!
@@ -156,6 +156,36 @@ describe SBM::Runner do
         subject.wait_for
       end
 
+    end
+
+    context 'clearing a batch' do
+
+      it 'should be an error without a batch name' do
+        subject.args.should == []
+        mock(subject).exit 1
+        subject.clear_batch
+      end
+
+      it 'should work with the coordinator' do
+        subject.args.replace %w(xyz)
+        mock(subject.coordinator).clear SBM::Coordinator::Batch.new('xyz')
+        dont_allow(subject).exit
+        subject.clear_batch
+      end
+    end
+
+    it 'should let you clear all batches' do
+      subject.args.replace []
+      mock(subject.coordinator).clear_batches
+      dont_allow(subject).exit
+      subject.clear_batches
+    end
+
+    it 'should let you clear all workers' do
+      subject.args.replace []
+      mock(subject.coordinator).clear_workers
+      dont_allow(subject).exit
+      subject.clear_workers
     end
 
   end

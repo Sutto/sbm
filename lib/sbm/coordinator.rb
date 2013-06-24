@@ -64,6 +64,21 @@ module SBM
       end
     end
 
+    def clear(batch)
+      redis.srem key(:batches), batch.to_s
+      redis.del key(:batches, batch, :completed)
+      redis.del key(:batches, batch, :started)
+    end
+
+    def clear_batches
+      batches.each { |b| clear b }
+      redis.del key(:batches)
+    end
+
+    def clear_workers
+      redis.del key(:workers)
+    end
+
     private
 
     def prepare(worker, batch)

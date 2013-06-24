@@ -117,4 +117,54 @@ describe SBM::Coordinator do
     subject.wait_for batch_a, 3
   end
 
+  it 'should support clearing a batch' do
+    subject.start batch_a, worker_a
+    subject.start batch_a, worker_b
+    subject.start batch_b, worker_c
+    subject.complete batch_b, worker_c
+    subject.batches.should =~ [batch_a, batch_b]
+    subject.started_workers_for_batch(batch_a).should =~ [worker_a, worker_b]
+    subject.started_workers_for_batch(batch_b).should =~ [worker_c]
+    subject.completed_workers_for_batch(batch_a).should =~ []
+    subject.completed_workers_for_batch(batch_b).should =~ [worker_c]
+    subject.clear batch_b
+    subject.batches.should =~ [batch_a]
+    subject.started_workers_for_batch(batch_a).should =~ [worker_a, worker_b]
+    subject.started_workers_for_batch(batch_b).should =~ []
+    subject.completed_workers_for_batch(batch_a).should =~ []
+    subject.completed_workers_for_batch(batch_b).should =~ []
+    subject.clear batch_a
+    subject.batches.should =~ []
+    subject.started_workers_for_batch(batch_a).should =~ []
+    subject.started_workers_for_batch(batch_b).should =~ []
+    subject.completed_workers_for_batch(batch_a).should =~ []
+    subject.completed_workers_for_batch(batch_b).should =~ []
+  end
+
+  it 'should support clearing all batches' do
+    subject.start batch_a, worker_a
+    subject.start batch_a, worker_b
+    subject.start batch_b, worker_c
+    subject.complete batch_b, worker_c
+    subject.batches.should =~ [batch_a, batch_b]
+    subject.started_workers_for_batch(batch_a).should =~ [worker_a, worker_b]
+    subject.started_workers_for_batch(batch_b).should =~ [worker_c]
+    subject.completed_workers_for_batch(batch_a).should =~ []
+    subject.completed_workers_for_batch(batch_b).should =~ [worker_c]
+    subject.clear_batches
+    subject.batches.should =~ []
+    subject.started_workers_for_batch(batch_a).should =~ []
+    subject.started_workers_for_batch(batch_b).should =~ []
+    subject.completed_workers_for_batch(batch_a).should =~ []
+    subject.completed_workers_for_batch(batch_b).should =~ []
+  end
+
+  it 'should support clear all workers' do
+    subject.start batch_a, worker_a
+    subject.start batch_a, worker_b
+    subject.workers.should =~ [worker_a, worker_b]
+    subject.clear_workers
+    subject.workers.should =~ []
+  end
+
 end

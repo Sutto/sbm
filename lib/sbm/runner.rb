@@ -38,8 +38,8 @@ module SBM
       output.puts ""
       output.puts ""
       coordinator.batches.each do |batch|
-        started   = coordinator.started_workers_for_batch batch
-        completed = coordinator.started_workers_for_batch completed
+        started   = coordinator.started_workers_for_batch   batch
+        completed = coordinator.completed_workers_for_batch batch
         output.puts "Batch: #{batch}"
         output.puts "Number Started:   #{started.size}"
         output.puts "Number Completed: #{completed.size}"
